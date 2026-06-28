@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import List
 import numpy as np
 import yfinance as yf
-from app.engine import calculate_parametric_var, calculate_historical_var
+from app.engine import calculate_parametric_var, calculate_historical_var, calculate_monte_carlo_var
 
 app = FastAPI(title="FinTech Quantitative Risk Engine")
 
@@ -38,8 +38,28 @@ async def get_portfolio_var(payload: PortfolioRequest):
         weights_arr = np.array(payload.weights)
         
         # Run our mathematical calculations from engine.py
+        # --- Run all 3 math calculations ---
         p_var_pct = calculate_parametric_var(returns, weights_arr, payload.confidence_level)
         h_var_pct = calculate_historical_var(returns, weights_arr, payload.confidence_level)
+        mc_var_pct = calculate_monte_carlo_var(returns, weights_arr, payload.portfolio_value, payload.confidence_level)
+        
+        return {
+            "status": "success",
+            "metadata": {
+                "tickers_analyzed": payload.tickers,
+                "confidence_level": payload.confidence_level,
+                "days_calculated": payload.days_historical,
+                "simulations_run": 10000
+            },
+            "metrics": {
+                "parametric_var_dollar": round(p_var_pct * payload.portfolio_value, 2),
+                "parametric_var_percent": round(p_var_pct * 100, 4),
+                "historical_var_dollar": round(h_var_pct * payload.portfolio_value, 2),
+                "historical_var_percent": round(h_var_pct * 100, 4),
+                "monte_carlo_var_dollar": round(mc_var_pct * payload.portfolio_value, 2),
+                "monte_carlo_var_percent": round(mc_var_pct * 100, 4)
+            }
+        }
         
         # Return a beautifully structured JSON response
         return {
