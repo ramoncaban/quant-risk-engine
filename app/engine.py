@@ -36,37 +36,41 @@ def calculate_historical_var(returns: pd.DataFrame, weights: np.ndarray, confide
     
     return float(var_pct)
 
-def calculate_monte_carlo_var(returns: pd.DataFrame, weights: np.ndarray, portfolio_value: float, confidence_level: float = 0.99, num_simulations: int = 10000) -> float:
+def calculate_monte_carlo_var(returns: pd.DataFrame, weights: np.ndarray, portfolio_value: float, confidence_level: float = 0.99, num_simulations: int = 10000):
     """
-    Calculates Value at Risk using a Monte Carlo Simulation (Geometric Brownian Motion)
-    across a multi-asset portfolio.
+    Calculates Monte Carlo VaR and returns the threshold along with a histogram 
+    distribution breakdown of simulated portfolio dollar returns.
     """
-    # 1. Calculate the mean daily return vector and covariance matrix
     mean_returns = returns.mean().values
     cov_matrix = returns.cov().values
-    
-    # 2. Compute the Cholesky Decomposition
-    # This correlates the random shocks across different assets (e.g., if Apple drops, Microsoft usually drops too)
     chol_matrix = np.linalg.cholesky(cov_matrix)
-    
     num_assets = len(weights)
     
-    # 3. Generate 10,000 independent random normal shocks for each asset
     random_shocks = np.random.normal(0, 1, (num_assets, num_simulations))
-    
-    # 4. Correlate the shocks using our Cholesky matrix
     correlated_shocks = np.dot(chol_matrix, random_shocks)
     
-    # 5. Calculate simulated daily returns for each asset using GBM drift + shock
-    # We use a 1-day horizon, so dt = 1
     drift = mean_returns - 0.5 * np.diag(cov_matrix)
     simulated_asset_returns = np.exp(drift[:, np.newaxis] + correlated_shocks) - 1
-    
-    # 6. Aggregate asset returns into portfolio returns based on weights
     simulated_portfolio_returns = np.dot(weights, simulated_asset_returns)
     
-    # 7. Sort returns and find the cutoff point for our confidence interval
     quantile = 1 - confidence_level
     var_pct = -np.percentile(simulated_portfolio_returns, quantile * 100)
     
-    return float(var_pct)
+    # --- NEW CHART DATA PROCESSING ---
+    # Convert percentages to actual simulated portfolio dollar returns
+    simulated_dollar_returns = simulated_portfolio_returns * portfolio_value
+    
+    # Segment the 10,000 runs into 30 uniform histogram bars (bins)
+    counts, bin_edges = np.histogram(simulated_dollar_returns, bins=30)
+    
+    chart_data = []
+    for i in range(len(counts)):
+        # Calculate mid-point of the bin for a clean label string
+        bin_label = f"${int((bin_edges[i] + bin_edges[i+1]) / 2):,}"
+        chart_data.append({
+            "bin": bin_label,
+            "frequency": int(counts[i])
+        })
+    # ---------------------------------
+    
+    return float(var_pct), chart_data

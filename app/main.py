@@ -46,12 +46,13 @@ async def get_portfolio_var(payload: PortfolioRequest):
         # Convert user weights into a numpy mathematical array
         weights_arr = np.array(payload.weights)
         
-        # Run all 3 math calculations from engine.py
+# Run all 3 math calculations from engine.py
         p_var_pct = calculate_parametric_var(returns, weights_arr, payload.confidence_level)
         h_var_pct = calculate_historical_var(returns, weights_arr, payload.confidence_level)
-        mc_var_pct = calculate_monte_carlo_var(returns, weights_arr, payload.portfolio_value, payload.confidence_level)
         
-        # Return a beautifully structured JSON response containing all data
+        # Capture BOTH outputs from the updated Monte Carlo engine
+        mc_var_pct, mc_chart_data = calculate_monte_carlo_var(returns, weights_arr, payload.portfolio_value, payload.confidence_level)
+        
         return {
             "status": "success",
             "metadata": {
@@ -67,7 +68,8 @@ async def get_portfolio_var(payload: PortfolioRequest):
                 "historical_var_percent": round(h_var_pct * 100, 4),
                 "monte_carlo_var_dollar": round(mc_var_pct * payload.portfolio_value, 2),
                 "monte_carlo_var_percent": round(mc_var_pct * 100, 4)
-            }
+            },
+            "chart_data": mc_chart_data  # <-- STREAM THIS NEW ARRAY TO THE FRONTEND
         }
 
     except Exception as e:
