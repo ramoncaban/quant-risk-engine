@@ -35,8 +35,8 @@ Bypasses standard lookback matrices to force historical date-window overrides, s
 
 ---
 
-## ⚡ Quick Start & Local Replication
-
+## ⚡ Quick Start & Local Replication 
+ 
 ### Backend Engine Setup
 1. Spin Up the Backend Engine
 ```bash
@@ -44,10 +44,23 @@ Bypasses standard lookback matrices to force historical date-window overrides, s
 cd quant-risk-engine
 
 # Activate your virtual environment
+# Windows PowerShell:
 .venv\Scripts\activate
+
+# Mac/Linux Terminal:
+source .venv/bin/activate
 
 # Install required dependencies
 pip install -r requirements.txt
 
 # Start the FastAPI engine node
 python -m uvicorn app.main:app --reload
+
+## ⚛️ Frontend Client Setup
+cd quant-risk-frontend
+
+# Install the necessary node packages
+npm install
+
+# Run the Vite local development compiler server
+npm run dev
