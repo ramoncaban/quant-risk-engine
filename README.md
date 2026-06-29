@@ -67,4 +67,6 @@ npm install
 
 # Run the Vite local development compiler server
 npm run dev
+
+Open your browser and navigate to http://localhost:5173 to interact with the finished visual workspace canvas.
 ```
