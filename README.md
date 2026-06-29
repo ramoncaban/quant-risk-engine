@@ -1,6 +1,7 @@
 # FinTech Quantitative Risk Engine 🚀
 
-<img width="800" height="566" alt="demo" src="https://github.com/user-attachments/assets/c126a83f-cf41-4c36-844c-a326d14b58e1" />
+<img width="800" height="566" alt="demo" src="https://github.com/user-attachments/assets/6ac4dfb0-c241-4988-848c-b31e2fa09d69" />
+
 
 
 An end-to-end quantitative portfolio analytics workstation. This application utilizes historical market data vectors via Yahoo Finance to compute Parametric, Historical, and Monte Carlo (Geometric Brownian Motion) Value at Risk (VaR) profiles across multi-asset portfolios.
