@@ -5,7 +5,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 import yfinance as yf
-from app.engine import calculate_parametric_var, calculate_historical_var, calculate_monte_carlo_var
+from app.engine import calculate_parametric_var, calculate_historical_var, calculate_monte_carlo_var, calculate_component_var
 
 app = FastAPI(title="FinTech Quantitative Risk Engine")
 
@@ -52,6 +52,9 @@ async def get_portfolio_var(payload: PortfolioRequest):
         
         # Capture BOTH outputs from the updated Monte Carlo engine
         mc_var_pct, mc_chart_data = calculate_monte_carlo_var(returns, weights_arr, payload.portfolio_value, payload.confidence_level)
+
+        # --- NEW COMPONENT RISK BREAKDOWN MATH ---
+        risk_components = calculate_component_var(returns, weights_arr, payload.portfolio_value, payload.confidence_level)
         
         return {
             "status": "success",
@@ -69,7 +72,8 @@ async def get_portfolio_var(payload: PortfolioRequest):
                 "monte_carlo_var_dollar": round(mc_var_pct * payload.portfolio_value, 2),
                 "monte_carlo_var_percent": round(mc_var_pct * 100, 4)
             },
-            "chart_data": mc_chart_data  # <-- STREAM THIS NEW ARRAY TO THE FRONTEND
+            "chart_data": mc_chart_data,  # <-- STREAM THIS NEW ARRAY TO THE FRONTEND
+            "component_data": risk_components # <-- STREAM THIS NEW RISK MATRIX ARRAY
         }
 
     except Exception as e:

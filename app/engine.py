@@ -74,3 +74,43 @@ def calculate_monte_carlo_var(returns: pd.DataFrame, weights: np.ndarray, portfo
     # ---------------------------------
     
     return float(var_pct), chart_data
+
+def calculate_component_var(returns: pd.DataFrame, weights: np.ndarray, portfolio_value: float, confidence_level: float = 0.99) -> list:
+    """
+    Calculates the individual risk contribution (Component VaR Percentage) 
+    for each asset in the portfolio using the Parametric Variance-Covariance approach.
+    """
+    # 1. Compute covariance matrix and portfolio properties
+    cov_matrix = returns.cov().values
+    portfolio_variance = np.dot(weights.T, np.dot(cov_matrix, weights))
+    portfolio_volatility = np.sqrt(portfolio_variance)
+    
+    if portfolio_volatility == 0:
+        return [{"asset": t, "percentage": 100 / len(weights)} for t in returns.columns]
+
+    # 2. Map confidence interval to standard normal distribution multiplier (Z-score)
+    from scipy.stats import norm
+    z_score = norm.ppf(confidence_level)
+    
+    # 3. Calculate Marginal VaR vector: MVaR = Z * (Cov * w) / portfolio_volatility
+    marginal_var = z_score * np.dot(cov_matrix, weights) / portfolio_volatility
+    
+    # 4. Calculate Component VaR (Dollar risk contribution per asset): CVaR = w * MVaR
+    component_var_dollar = weights * marginal_var * portfolio_value
+    
+    # 5. Sum total dollar risk to normalize percentages cleanly
+    total_cvar_dollar = np.sum(component_var_dollar)
+    
+    # 6. Format into a clean list of coordinate blocks for our Recharts Donut chart
+    component_data = []
+    tickers = list(returns.columns)
+    
+    for i in range(len(tickers)):
+        # Calculate percentage contribution, fallback to 0 if total risk is zero or negative
+        pct_contrib = round((component_var_dollar[i] / total_cvar_dollar) * 100, 2) if total_cvar_dollar > 0 else 0.0
+        component_data.append({
+            "asset": tickers[i],
+            "percentage": max(0.0, pct_contrib) # Clamp negative risk offsets to 0 for pie presentation
+        })
+        
+    return component_data
