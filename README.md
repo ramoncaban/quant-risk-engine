@@ -55,8 +55,11 @@ pip install -r requirements.txt
 
 # Start the FastAPI engine node
 python -m uvicorn app.main:app --reload
+```
 
 ## ⚛️ Frontend Client Setup
+```bash
+# Open a second terminal window and navigate to the user interface directory
 cd quant-risk-frontend
 
 # Install the necessary node packages
@@ -64,3 +67,4 @@ npm install
 
 # Run the Vite local development compiler server
 npm run dev
+```
